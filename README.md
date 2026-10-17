@@ -5,6 +5,7 @@ A self-hosted start page for the household, running on a Raspberry Pi. It has re
 ## Features
 
 - **Lists**: To-do and shopping lists. 📌 **Persistent** items (e.g. "Milk") stay on the list and are only unchecked by *Clear checked*. One-time items are removed.
+  - **Categories**: hover an item and click ＋ to add sub-items, which turns the item into a category with progress ("2/5"). Its checkbox checks or unchecks all sub-items, and ▾/▸ collapses it (remembered per device). *Clear checked* removes a finished one-time category together with its sub-items. In persistent categories, each sub-item follows its own 📌 setting.
 - **Calendar**: Month view. Click a day to see its appointments, and click *＋ Event* (or double-click a day) to add one. Events can span **several days** (e.g. vacation) and have a **color**. In the month view they show as colored bars that continue across days.
 - **Day timeline**: Today's appointments on a time axis with a "now" line. Multi-day events show as chips ("Vacation · day 3/7"). Click an hour to add an event there, and the next 7 days are listed below.
 - **Notepad**: Click ✎ to edit and *Done* to view. Use the toolbar or shortcuts: `**bold**` (Ctrl+B), `*italic*` (Ctrl+I), `++underline++` (Ctrl+U), `~~strike~~` (Ctrl+Shift+X), `{red|colored text}`, `[label](https://…)` (Ctrl+K). Bare `https://…` and `www.…` addresses become links. Also `# heading`, `- list`, `1. list` and `> quote`. HTML is never rendered.

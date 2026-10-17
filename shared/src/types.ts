@@ -24,6 +24,8 @@ export interface ItemRec extends SyncFields {
   /** Persistent items stay on the list and are only unchecked when clearing. */
   persistent: boolean;
   sortOrder: number;
+  /** Category this item belongs to (one level deep). Missing/null = top-level item. */
+  parentId?: string | null;
 }
 
 export const EVENT_COLORS = ['blue', 'green', 'red', 'orange', 'purple', 'teal', 'pink', 'gray'] as const;

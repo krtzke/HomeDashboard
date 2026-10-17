@@ -313,6 +313,52 @@ textarea:focus {
   }
 }
 
+/* Nested lists: categories with sub-items */
+.node {
+  list-style: none;
+}
+.expander {
+  width: 1.4rem;
+  flex-shrink: 0;
+  padding: 0;
+  text-align: center;
+}
+.category > .item label span {
+  font-weight: 600;
+}
+.progress {
+  color: var(--muted);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  margin-left: auto;
+  padding-right: 0.2rem;
+}
+.item .add-sub {
+  visibility: hidden;
+}
+.item:hover .add-sub {
+  visibility: visible;
+}
+@media (hover: none) {
+  .item .add-sub {
+    visibility: visible;
+  }
+}
+.subitems {
+  list-style: none;
+  margin: 0;
+  padding: 0 0 0 1.4rem;
+  border-left: 2px solid var(--border);
+  margin-left: 0.65rem;
+}
+.subitems .item label {
+  padding: 0.35rem 0;
+}
+.add-sub-row {
+  list-style: none;
+  padding: 0.3rem 0;
+}
+
 /* ---------- Calendar ---------- */
 .month {
   display: grid;
