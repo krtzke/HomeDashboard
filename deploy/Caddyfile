@@ -1,6 +1,6 @@
 # Copy to /etc/caddy/Caddyfile and replace the address with your Pi's fixed IP
 # (and optionally a hostname your router resolves, e.g. "https://dashboard.lan").
-https://192.168.178.50 {
+https://192.168.2.56 {
 	# Certificate from Caddy's own local CA — install its root cert on each device (see README).
 	tls internal
 	encode zstd gzip
