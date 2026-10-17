@@ -1,0 +1,518 @@
+/* Styles for clock, countdown, links, chores, birthdays, weather, waste and Pi status widgets. */
+
+/* ---------- Shared bits ---------- */
+.muted {
+  color: var(--muted);
+}
+.error-text {
+  color: var(--danger);
+  font-size: 0.85rem;
+  margin: 0;
+}
+.icon-btn.active {
+  color: var(--accent);
+}
+.settings,
+.inline-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.settings p {
+  margin: 0;
+  font-size: 0.85rem;
+}
+.inline-form {
+  padding: 0.5rem;
+  background: var(--surface-2);
+  border-radius: 8px;
+}
+.inline-form .row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+.inline-form .row > .grow,
+.inline-form .row > input[type='date'],
+.inline-form .row > input:not([type]) {
+  flex: 1;
+}
+.settings .field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+.settings .field input {
+  color: var(--text);
+  font-size: 0.95rem;
+}
+.check {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.inline-form .row > input.emoji-input {
+  flex: 0 0 3rem;
+  width: 3rem;
+  text-align: center;
+}
+.num-input {
+  width: 4rem;
+}
+.or {
+  text-align: center;
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+.swatch.none {
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 0.8rem;
+  line-height: 1;
+}
+
+/* ---------- Clock ---------- */
+.clock {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  container-type: inline-size;
+}
+.clock-time {
+  font-size: clamp(2.2rem, 26cqw, 7rem);
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+.clock-sec {
+  font-size: 0.45em;
+  color: var(--muted);
+}
+.clock-date {
+  font-size: clamp(1rem, 7cqw, 1.6rem);
+  margin-top: 0.3rem;
+}
+.clock-week,
+.clock-tz2 {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+/* ---------- Lists used by several widgets ---------- */
+.countdowns,
+.chores,
+.birthdays,
+.waste-list,
+.link-edit-list,
+.place-results,
+.wx-days {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.cd-info,
+.chore-info,
+.bd-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.cd-date,
+.chore-every,
+.bd-age {
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+
+/* ---------- Countdown ---------- */
+.countdowns li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.45rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.cd-emoji {
+  font-size: 1.5rem;
+}
+.cd-count {
+  color: var(--muted);
+  font-size: 0.8rem;
+  white-space: nowrap;
+}
+.cd-count strong {
+  color: var(--text);
+  font-size: 1.5rem;
+  font-variant-numeric: tabular-nums;
+}
+.countdowns li.is-today .cd-count strong {
+  color: var(--accent);
+}
+.cd-del {
+  visibility: hidden;
+}
+.countdowns li:hover .cd-del {
+  visibility: visible;
+}
+@media (hover: none) {
+  .cd-del {
+    visibility: visible;
+  }
+}
+
+/* ---------- Quick links ---------- */
+.link-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(4.6rem, 1fr));
+  gap: 0.4rem;
+}
+.link-tile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.5rem 0.25rem;
+  border-radius: 10px;
+  text-decoration: none;
+  color: inherit;
+  font-size: 0.78rem;
+  text-align: center;
+  min-width: 0;
+}
+.link-tile span:last-child {
+  max-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.link-tile:hover {
+  background: var(--surface-2);
+}
+.link-icon {
+  width: 2.2rem;
+  height: 2.2rem;
+  border-radius: 10px;
+  flex-shrink: 0;
+  object-fit: contain;
+}
+.link-icon.emoji {
+  font-size: 1.7rem;
+  line-height: 2.2rem;
+  text-align: center;
+}
+.link-icon.letter {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--accent);
+  color: #fff;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+.link-edit-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.3rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.link-edit-list .link-icon {
+  width: 1.6rem;
+  height: 1.6rem;
+  font-size: 1.2rem;
+  line-height: 1.6rem;
+}
+.link-edit-title {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.link-edit-title small {
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ---------- Chores ---------- */
+.chores li {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.chore-check {
+  width: 1.6rem;
+  height: 1.6rem;
+  padding: 0;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  flex-shrink: 0;
+  font-weight: 700;
+}
+.chore-check:hover {
+  border-color: var(--ok);
+}
+.chore-check.checked {
+  background: var(--ok);
+  border-color: var(--ok);
+  color: #fff;
+}
+.chores li.done .chore-title {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+.chore-status {
+  font-size: 0.78rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.chore-status.due {
+  color: var(--warn);
+  font-weight: 600;
+}
+.chore-status.overdue {
+  color: var(--danger);
+  font-weight: 600;
+}
+
+/* ---------- Birthdays ---------- */
+.birthdays li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.35rem 0.25rem;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  border-radius: 6px;
+}
+.birthdays li:hover {
+  background: var(--surface-2);
+}
+.bd-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 2.4rem;
+  line-height: 1.1;
+}
+.bd-date strong {
+  font-size: 1.1rem;
+}
+.bd-date small {
+  font-size: 0.7rem;
+  color: var(--muted);
+  text-transform: uppercase;
+}
+.bd-when {
+  font-size: 0.8rem;
+  color: var(--muted);
+  white-space: nowrap;
+}
+.birthdays li.soon .bd-when {
+  color: var(--accent);
+}
+.birthdays li.is-today {
+  background: color-mix(in srgb, var(--warn) 18%, transparent);
+}
+.birthdays li.is-today .bd-when {
+  color: var(--text);
+  font-weight: 600;
+}
+
+/* ---------- Weather ---------- */
+.weather {
+  display: flex;
+  flex-direction: column;
+  gap: 0.6rem;
+}
+.wx-now {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+}
+.wx-icon {
+  font-size: 2.6rem;
+  line-height: 1;
+}
+.wx-temp {
+  font-size: 2.6rem;
+  font-weight: 650;
+  line-height: 1;
+}
+.wx-desc {
+  display: flex;
+  flex-direction: column;
+  font-size: 0.8rem;
+  color: var(--muted);
+  min-width: 0;
+}
+.wx-desc strong {
+  color: var(--text);
+  font-size: 0.95rem;
+}
+.wx-hours {
+  display: flex;
+  gap: 0.15rem;
+  overflow-x: auto;
+  padding-bottom: 0.2rem;
+}
+.wx-hour {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 2.6rem;
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.wx-hour strong {
+  color: var(--text);
+  font-size: 0.85rem;
+}
+.wx-hour-icon {
+  font-size: 1.2rem;
+}
+.rainy {
+  color: var(--accent) !important;
+}
+.wx-days li {
+  display: grid;
+  grid-template-columns: 2.5rem 1.6rem 1fr auto;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0.2rem 0;
+  border-top: 1px solid var(--border);
+}
+.wx-rain {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+.wx-range {
+  font-variant-numeric: tabular-nums;
+}
+.wx-updated {
+  font-size: 0.7rem;
+  color: var(--muted);
+  text-align: right;
+}
+.place-results li button {
+  width: 100%;
+  text-align: left;
+  border: none;
+  border-radius: 6px;
+}
+.place-results small {
+  color: var(--muted);
+}
+
+/* ---------- Waste ---------- */
+.waste-alert {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: 0.5rem 0.6rem;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--warn) 18%, var(--surface));
+  border-left: 4px solid var(--warn);
+}
+.waste-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.waste-date {
+  display: flex;
+  flex-direction: column;
+  width: 6.2rem;
+  flex-shrink: 0;
+  font-size: 0.9rem;
+}
+.waste-date small {
+  color: var(--muted);
+  font-size: 0.75rem;
+}
+.waste-types {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+}
+.waste-chip {
+  font-size: 0.8rem;
+  padding: 0.05rem 0.4rem;
+  border-left: 3px solid;
+  border-radius: 4px;
+  background: var(--surface-2);
+}
+
+/* ---------- Pi status ---------- */
+.system {
+  display: flex;
+  flex-direction: column;
+  gap: 0.55rem;
+}
+.system.stale {
+  opacity: 0.6;
+}
+.sys-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+.ok {
+  --level: var(--ok);
+}
+.warn {
+  --level: var(--warn);
+}
+.bad {
+  --level: var(--danger);
+}
+.sys-temp {
+  font-size: 2rem;
+  font-weight: 650;
+  color: var(--level, var(--text));
+}
+.sys-uptime {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 0.85rem;
+}
+.meter-head {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  margin-bottom: 0.15rem;
+}
+.meter-bar {
+  height: 8px;
+  border-radius: 4px;
+  background: var(--surface-2);
+  overflow: hidden;
+}
+.meter-fill {
+  height: 100%;
+  border-radius: 4px;
+  background: var(--level);
+  transition: width 0.4s;
+}
+.sys-throttle {
+  font-size: 0.8rem;
+  color: var(--level);
+}
+.sys-meta {
+  font-size: 0.7rem;
+}
