@@ -5,6 +5,7 @@ import { db } from './db.ts';
 import { create, putRecords, remove } from './data.ts';
 import { syncNow, useSyncStatus } from './sync.ts';
 import { WIDGETS } from './widgets/registry.ts';
+import { WidgetContext } from './widgets/WidgetFrame.tsx';
 import type { ListRec, WidgetRec, WidgetType } from '../../shared/src/types.ts';
 
 const COLS = 12;
@@ -79,7 +80,11 @@ function Dashboard({ widgets, editing }: { widgets: WidgetRec[]; editing: boolea
 
   const render = (w: WidgetRec) => {
     const Component = WIDGETS[w.type]?.component;
-    return Component ? <Component widget={w} editing={editing} onRemove={() => removeWidget(w)} /> : null;
+    return Component ? (
+      <WidgetContext.Provider value={w}>
+        <Component widget={w} editing={editing} onRemove={() => removeWidget(w)} />
+      </WidgetContext.Provider>
+    ) : null;
   };
 
   // The container must always render so useContainerWidth can measure it.

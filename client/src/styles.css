@@ -225,6 +225,19 @@ textarea:focus {
   cursor: grab;
   background: var(--surface-2);
 }
+/* Optional per-widget header color (tinted so the title stays readable in light and dark mode) */
+.has-header-color > .widget-header {
+  background: color-mix(in srgb, var(--header-color) 24%, var(--surface));
+  border-bottom: 2px solid var(--header-color);
+}
+.has-header-color > .widget-header.drag-handle {
+  background: color-mix(in srgb, var(--header-color) 34%, var(--surface));
+}
+.header-colors {
+  padding: 0.45rem 0.8rem;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+}
 .widget-title {
   font-size: 1rem;
   margin: 0;
