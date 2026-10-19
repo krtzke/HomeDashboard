@@ -18,7 +18,7 @@ A self-hosted start page for the household, running on a Raspberry Pi. It has re
 - **Waste collection**: Paste your municipality's iCal/ICS (or `webcal://`) URL, which the Pi fetches, or upload an `.ics` file. Shows a "Tomorrow — put it out tonight" alert and color-coded bin types. Works offline from the saved copy.
 - **Pi status**: CPU temperature, load, memory, disk, uptime and the Pi's under-voltage/throttling flags (`vcgencmd`).
 - **Timers**: Presets or custom durations (`5`, `5:30`, `1:00:00`), with sound, notification and vibration. Timers belong to the device that started them and don't sync.
-- **Layout**: *✎ Edit* lets you drag widgets by their header, resize them, add and remove them, and give each header a color (🎨). The layout syncs to all devices. Phones show the widgets in one column.
+- **Layout**: *✎ Edit* lets you drag widgets by their header, resize them, add and remove them, and give each header a color (🎨). ▾/▸ in a header collapses a widget to just its header. This is remembered per device, and collapsed widgets keep working, so timers still ring. The layout syncs to all devices. Phones show the widgets in one column.
 - **Offline + sync**: All data is stored in the browser (IndexedDB) first. The sync button shows the state and the number of pending changes, and the app syncs automatically on reconnect, when opened, and every 30 s.
 
 ## Development (Windows/macOS/Linux)

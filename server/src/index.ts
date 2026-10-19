@@ -68,10 +68,13 @@ app.post<{ Body: SyncRequest }>('/api/sync', { schema: { body: syncBodySchema } 
 );
 
 if (existsSync(CLIENT_DIST)) {
-  await app.register(fastifyStatic, { root: CLIENT_DIST, wildcard: false });
-  // SPA fallback: unknown non-API GETs get index.html
+  // wildcard (default) looks files up per request, so a rebuild is served without restarting the server.
+  await app.register(fastifyStatic, { root: CLIENT_DIST });
+  // SPA fallback: unknown page routes get index.html; missing files (e.g. /assets/x.js) and API paths get a real 404.
   app.setNotFoundHandler((req, reply) => {
-    if (req.method === 'GET' && !req.url.startsWith('/api/')) return reply.sendFile('index.html');
+    const path = req.url.split('?')[0];
+    const isPage = req.method === 'GET' && !path.startsWith('/api/') && !/\.[a-z0-9]+$/i.test(path);
+    if (isPage) return reply.sendFile('index.html');
     reply.code(404).send({ error: 'Not found' });
   });
 } else {

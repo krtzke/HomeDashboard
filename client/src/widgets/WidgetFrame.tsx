@@ -10,8 +10,14 @@ export interface WidgetProps {
   onRemove: () => void;
 }
 
-/** The widget being rendered; lets the frame handle per-widget settings shared by all types (header color). */
-export const WidgetContext = createContext<WidgetRec | null>(null);
+/** The widget being rendered; lets the frame handle features shared by all types (header color, collapsing). */
+export interface WidgetContextValue {
+  widget: WidgetRec;
+  collapsed: boolean;
+  toggleCollapsed: () => void;
+}
+
+export const WidgetContext = createContext<WidgetContextValue | null>(null);
 
 interface FrameProps {
   title: ReactNode;
@@ -28,14 +34,28 @@ interface FrameProps {
 }
 
 export function WidgetFrame({ title, icon, editing, onRemove, onSettings, settingsOpen, actions, footer, children }: FrameProps) {
-  const widget = useContext(WidgetContext);
+  const ctx = useContext(WidgetContext);
+  const widget = ctx?.widget;
+  const collapsed = ctx?.collapsed ?? false;
   const [picking, setPicking] = useState(false);
   const headerColor = (widget?.config.headerColor as EventColor | undefined) || null;
   const style = headerColor ? ({ '--header-color': COLOR_HEX[headerColor] } as CSSProperties) : undefined;
+  const cls = ['widget', headerColor && 'has-header-color', collapsed && 'collapsed'].filter(Boolean).join(' ');
 
+  // Collapsed widgets stay mounted (body only hidden), so timers keep ringing and data keeps refreshing.
   return (
-    <section className={`widget${headerColor ? ' has-header-color' : ''}`} style={style}>
+    <section className={cls} style={style}>
       <header className={`widget-header${editing ? ' drag-handle' : ''}`}>
+        {ctx && (
+          <button
+            className="icon-btn subtle collapse-btn"
+            title={collapsed ? 'Expand' : 'Collapse'}
+            aria-expanded={!collapsed}
+            onClick={ctx.toggleCollapsed}
+          >
+            {collapsed ? '▸' : '▾'}
+          </button>
+        )}
         <span className="widget-icon" aria-hidden>
           {icon}
         </span>

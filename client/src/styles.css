@@ -233,6 +233,23 @@ textarea:focus {
 .has-header-color > .widget-header.drag-handle {
   background: color-mix(in srgb, var(--header-color) 34%, var(--surface));
 }
+/* Collapsed widget: header only (body stays mounted but hidden) */
+.collapse-btn {
+  margin-left: -0.4rem;
+  padding: 0.2rem 0.25rem;
+}
+.widget.collapsed .widget-body,
+.widget.collapsed .widget-footer,
+.widget.collapsed .header-colors {
+  display: none;
+}
+.widget.collapsed .widget-header {
+  height: 100%;
+  border-bottom: none;
+}
+.react-grid-item:has(> .widget.collapsed) > .react-resizable-handle {
+  display: none;
+}
 .header-colors {
   padding: 0.45rem 0.8rem;
   border-bottom: 1px solid var(--border);

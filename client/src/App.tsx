@@ -55,25 +55,49 @@ function SyncIndicator() {
   );
 }
 
+/** Collapsed widgets are remembered per device (not synced), like collapsed list categories. */
+const COLLAPSED_WIDGETS_KEY = 'collapsed-widgets';
+
+function useCollapsedWidgets() {
+  const [collapsed, setCollapsed] = useState<Set<string>>(() => {
+    try {
+      return new Set(JSON.parse(localStorage.getItem(COLLAPSED_WIDGETS_KEY) ?? '[]'));
+    } catch {
+      return new Set();
+    }
+  });
+  const toggle = (id: string) =>
+    setCollapsed((prev) => {
+      const next = new Set(prev);
+      if (!next.delete(id)) next.add(id);
+      try {
+        localStorage.setItem(COLLAPSED_WIDGETS_KEY, JSON.stringify([...next]));
+      } catch {
+        /* storage unavailable — state just isn't remembered */
+      }
+      return next;
+    });
+  return [collapsed, toggle] as const;
+}
+
 function Dashboard({ widgets, editing }: { widgets: WidgetRec[]; editing: boolean }) {
   const { width, containerRef, mounted } = useContainerWidth();
   const mobile = width < MOBILE_BREAKPOINT;
+  const [collapsed, toggleCollapsed] = useCollapsedWidgets();
 
-  const layout: Layout = widgets.map((w) => ({
-    i: w.id,
-    x: w.x,
-    y: w.y,
-    w: w.w,
-    h: w.h,
-    minW: WIDGETS[w.type]?.size.minW,
-    minH: WIDGETS[w.type]?.size.minH,
-  }));
+  // A collapsed widget takes one row (its header) and can't be resized; its real height stays in the record.
+  const layout: Layout = widgets.map((w) =>
+    collapsed.has(w.id)
+      ? { i: w.id, x: w.x, y: w.y, w: w.w, h: 1, minW: WIDGETS[w.type]?.size.minW, isResizable: false }
+      : { i: w.id, x: w.x, y: w.y, w: w.w, h: w.h, minW: WIDGETS[w.type]?.size.minW, minH: WIDGETS[w.type]?.size.minH },
+  );
 
   function saveLayout(next: Layout) {
     if (!editing) return;
     const changed = widgets.flatMap((w) => {
       const l = next.find((n) => n.i === w.id);
-      return l && (l.x !== w.x || l.y !== w.y || l.w !== w.w || l.h !== w.h) ? [{ ...w, x: l.x, y: l.y, w: l.w, h: l.h }] : [];
+      const h = collapsed.has(w.id) ? w.h : l?.h;
+      return l && (l.x !== w.x || l.y !== w.y || l.w !== w.w || h !== w.h) ? [{ ...w, x: l.x, y: l.y, w: l.w, h: h ?? w.h }] : [];
     });
     void putRecords('widgets', changed);
   }
@@ -81,7 +105,7 @@ function Dashboard({ widgets, editing }: { widgets: WidgetRec[]; editing: boolea
   const render = (w: WidgetRec) => {
     const Component = WIDGETS[w.type]?.component;
     return Component ? (
-      <WidgetContext.Provider value={w}>
+      <WidgetContext.Provider value={{ widget: w, collapsed: collapsed.has(w.id), toggleCollapsed: () => toggleCollapsed(w.id) }}>
         <Component widget={w} editing={editing} onRemove={() => removeWidget(w)} />
       </WidgetContext.Provider>
     ) : null;
@@ -97,7 +121,7 @@ function Dashboard({ widgets, editing }: { widgets: WidgetRec[]; editing: boolea
           {[...widgets]
             .sort((a, b) => a.y - b.y || a.x - b.x)
             .map((w) => (
-              <div key={w.id} style={{ height: Math.max(w.h * ROW_HEIGHT, 260) }}>
+              <div key={w.id} style={collapsed.has(w.id) ? undefined : { height: Math.max(w.h * ROW_HEIGHT, 260) }}>
                 {render(w)}
               </div>
             ))}
