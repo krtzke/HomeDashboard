@@ -4,6 +4,7 @@ import { addDays, differenceInCalendarDays } from 'date-fns';
 import { db } from '../db.ts';
 import { create, remove, update } from '../data.ts';
 import { fromDateStr, toDateStr } from '../dates.ts';
+import { useWidgetConfig } from './config.ts';
 import { WidgetFrame, type WidgetProps } from './WidgetFrame.tsx';
 import type { ChoreRec, WidgetRec } from '../../../shared/src/types.ts';
 
@@ -44,13 +45,30 @@ export function ChoresWidget({ widget, editing, onRemove }: WidgetProps) {
   const [adding, setAdding] = useState(false);
   const sorted = [...chores].sort((a, b) => dueIn(a, today) - dueIn(b, today) || a.title.localeCompare(b.title));
   const dueCount = chores.filter((c) => dueIn(c, today) <= 0 && c.lastDone !== today).length;
+  const [config, setConfig] = useWidgetConfig(widget, { title: 'Chores' });
+  const name = config.title || 'Chores';
+
+  function rename() {
+    const title = prompt('Widget name', name)?.trim();
+    if (title) void setConfig({ title });
+  }
+
+  const title = editing ? (
+    <button className="link-btn" onClick={rename} title="Rename">
+      {name} ✎
+    </button>
+  ) : dueCount ? (
+    `${name} · ${dueCount} due`
+  ) : (
+    name
+  );
 
   const markDone = (c: ChoreRec) => update('chores', c.id, { lastDone: today, prevDone: c.lastDone });
   const undo = (c: ChoreRec) => update('chores', c.id, { lastDone: c.prevDone, prevDone: null });
 
   return (
     <WidgetFrame
-      title={dueCount ? `Chores · ${dueCount} due` : 'Chores'}
+      title={title}
       icon="🧹"
       editing={editing}
       onRemove={onRemove}
