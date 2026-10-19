@@ -1,4 +1,4 @@
-/* Styles for clock, countdown, links, chores, birthdays, weather, waste and Pi status widgets. */
+/* Styles for clock, countdown, links, chores, birthdays, weather, waste, Pi status and health check widgets. */
 
 /* ---------- Shared bits ---------- */
 .muted {
@@ -566,4 +566,80 @@
 }
 .sys-meta {
   font-size: 0.7rem;
+}
+
+/* ---------- Health checks ---------- */
+.health {
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.health.stale .health-list {
+  opacity: 0.6;
+}
+.health-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.health-list li {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.health-dot {
+  width: 0.7rem;
+  height: 0.7rem;
+  border-radius: 50%;
+  flex-shrink: 0;
+  background: var(--border);
+}
+.health-dot.up {
+  background: var(--ok);
+}
+.health-dot.grace {
+  background: var(--warn);
+}
+.health-dot.down {
+  background: var(--danger);
+}
+.health-dot.paused {
+  background: var(--muted);
+}
+.health-badge {
+  min-width: 1.3rem;
+  padding: 0 0.35rem;
+  border-radius: 999px;
+  background: var(--danger);
+  color: #fff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  line-height: 1.3rem;
+  text-align: center;
+}
+.health-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+.health-name {
+  font-weight: 600;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.health-info small {
+  font-size: 0.78rem;
+}
+.health-updated {
+  font-size: 0.7rem;
+  text-align: right;
+}
+.row-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.4rem;
 }

@@ -85,7 +85,8 @@ export type WidgetType =
   | 'weather'
   | 'waste'
   | 'system'
-  | 'wake';
+  | 'wake'
+  | 'health';
 
 export type PageTheme = 'auto' | 'light' | 'dark';
 
@@ -162,3 +163,21 @@ export interface SystemStatus {
   /** Raw value of `vcgencmd get_throttled` (bit flags), null if not a Pi. */
   throttled: number | null;
 }
+
+/** One check from Healthchecks.io, as the "Health checks" widget shows it. */
+export interface HealthCheck {
+  name: string;
+  /** 'grace': late but not yet alerting; 'new': never pinged. */
+  status: 'up' | 'grace' | 'down' | 'paused' | 'new';
+  /** A run has signalled /start and not finished yet. */
+  started: boolean;
+  /** ISO timestamps, null if never / not scheduled. */
+  lastPing: string | null;
+  nextPing: string | null;
+  /** Seconds between /start and the finishing ping of the last run, if known. */
+  lastDuration: number | null;
+}
+
+export type HealthChecksResponse =
+  | { configured: false }
+  | { configured: true; checks: HealthCheck[]; fetchedAt: number };

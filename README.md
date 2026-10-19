@@ -18,6 +18,7 @@ A self-hosted start page for the household, running on a Raspberry Pi. It has re
 - **Waste collection**: Paste your municipality's iCal/ICS (or `webcal://`) URL, which the Pi fetches, or upload an `.ics` file. Shows a "Tomorrow — put it out tonight" alert and color-coded bin types. Works offline from the saved copy.
 - **Wake PC**: ⚡ Wake sends a Wake-on-LAN packet from the Pi, so it also works from away via Tailscale. A dot shows whether the PC is online (ping, or the Remote Desktop / file sharing ports). Add devices with ⚙ using their MAC address and IP (`ipconfig /all` on Windows). The PC needs Wake-on-LAN enabled in its BIOS/UEFI and network adapter settings, and should be connected by cable.
 - **Pi status**: CPU temperature, load, memory, disk, uptime and the Pi's under-voltage/throttling flags (`vcgencmd`).
+- **Health checks**: Status of your [Healthchecks.io](https://healthchecks.io) checks (backups, heartbeats…) with green/late/failing dots and a badge counting failures. Paste a read-only API key with ⚙. The key stays on the Pi, and the last status is shown offline. See [Monitoring](deploy/README.md#monitoring).
 - **Timers**: Presets or custom durations (`5`, `5:30`, `1:00:00`), with sound, notification and vibration. Timers belong to the device that started them and don't sync.
 - **Layout**: *✎ Edit* lets you drag widgets by their header, resize them, add and remove them, and give each header a color (🎨). ▾/▸ in a header collapses a widget to just its header. This is remembered per device, and collapsed widgets keep working, so timers still ring. The layout syncs to all devices. Phones show the widgets in one column.
 - **Pages**: Tabs such as "Home", "Kitchen" or "Work", each with its own widgets. In ✎ Edit mode:
@@ -61,7 +62,7 @@ Browser (PWA)                               Raspberry Pi
 | Path | Contents |
 |---|---|
 | `shared/src/types.ts` | Record and sync types used by both sides |
-| `server/src/` | Fastify server, SQLite migrations (`db.ts`), sync logic (`sync.ts`), optional PIN (`auth.ts`) |
+| `server/src/` | Fastify server, SQLite migrations (`db.ts`), sync logic (`sync.ts`), optional PIN (`auth.ts`), Healthchecks proxy (`healthchecks.ts`) |
 | `server/test/` | Sync tests (`node --test`) |
 | `client/src/db.ts`, `data.ts`, `sync.ts` | Local DB, write helpers (stamp + outbox), sync engine |
 | `client/src/widgets/` | Widgets + `registry.ts`. Register a new widget type there |

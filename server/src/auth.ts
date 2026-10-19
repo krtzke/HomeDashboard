@@ -2,10 +2,10 @@
 // While a PIN is set, every /api route except the public ones needs a session cookie.
 // The app shell stays public (it holds no data), so offline mode and app install keep working.
 import { createHash, createHmac, randomBytes, scrypt, timingSafeEqual } from 'node:crypto';
-import { chmodSync, existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname } from 'node:path';
+import { existsSync, readFileSync, rmSync } from 'node:fs';
 import { promisify } from 'node:util';
 import type { FastifyInstance, FastifyReply, FastifyRequest } from 'fastify';
+import { writePrivate } from './files.ts';
 
 export const COOKIE_NAME = 'hd_session';
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -205,15 +205,6 @@ function readStoredPin(path: string): StoredPin | null {
   const parsed = JSON.parse(readFileSync(path, 'utf8')) as Partial<StoredPin>;
   if (typeof parsed.salt !== 'string' || typeof parsed.hash !== 'string') throw new Error(`Invalid PIN file: ${path}`);
   return { salt: parsed.salt, hash: parsed.hash };
-}
-
-/** Writes a file only the service user can read, replacing it atomically. */
-function writePrivate(path: string, content: string) {
-  mkdirSync(dirname(path), { recursive: true });
-  const tmp = `${path}.tmp`;
-  writeFileSync(tmp, content, { mode: 0o600 });
-  chmodSync(tmp, 0o600);
-  renameSync(tmp, path);
 }
 
 function readCookie(header: string | undefined, name: string): string | undefined {

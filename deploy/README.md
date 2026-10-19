@@ -156,4 +156,40 @@ crontab -e                                # daily at 03:00:
 # 0 3 * * * bash /home/<user>/HomeDashboard/deploy/backup.sh
 ```
 
-Backups are stored outside the project folder, so they survive if the folder is deleted. To restore: `sudo systemctl stop homedashboard`, copy a backup over `data/dashboard.db` and delete `data/dashboard.db-wal` and `data/dashboard.db-shm` if they exist, then start the service again. Devices that already have data simply re-sync with the restored server.
+Each backup is the database plus, if a PIN is set, `dashboard-YYYY-MM-DD.pin.json` and `.session-secret`. The 14 newest days are kept. Backups are stored outside the project folder, so they survive if the folder is deleted. They're still on the same SD card, though, so copy them off the Pi regularly, e.g. to a USB stick or cloud storage.
+
+To restore:
+1. `sudo systemctl stop homedashboard`.
+2. Copy a backup over `data/dashboard.db`, and delete `data/dashboard.db-wal` and `data/dashboard.db-shm` if they exist.
+3. Copy that day's `.pin.json` and `.session-secret` to `data/pin.json` and `data/session-secret`.
+4. Start the service again.
+
+Devices that already have data simply re-sync with the restored server.
+
+## Monitoring
+
+[Healthchecks.io](https://healthchecks.io) (free for up to 20 checks) emails you when an expected signal from the Pi fails or **doesn't arrive at all**. That also covers a Pi that is switched off or offline, which the Pi can't report about itself.
+
+**Backup check:** in Healthchecks, add a check with the schedule `0 3 * * *` (the cron line above), your time zone and a grace time of 1 hour. Then pass its ping URL to the backup script:
+
+```
+0 3 * * * HC_PING_URL=https://hc-ping.com/<uuid> bash /home/<user>/HomeDashboard/deploy/backup.sh
+```
+
+The script reports when it starts and whether it succeeded, so failed runs, hung runs and runs that never happen all trigger an alert.
+
+**Heartbeat check:** add a check with a period of 5 minutes and a grace time of 10 minutes, then let cron confirm every 5 minutes that the dashboard answers:
+
+```
+*/5 * * * * curl -fsS -m 10 -o /dev/null http://127.0.0.1:3000/api/health && curl -fsS -m 10 --retry 3 -o /dev/null https://hc-ping.com/<uuid>
+```
+
+If you use Tailscale, check the Tailscale address (`https://<pi>.<tailnet>.ts.net/api/health`) instead, so the alert also fires when Tailscale serve stops working.
+
+**Health checks widget:** shows your checks on the dashboard. A failing count appears as a badge, and the last status stays visible offline.
+1. In Healthchecks, open the project's **Settings → API Access** and create a **read-only** API key.
+2. Add the widget in ✎ Edit mode and paste the key into its ⚙. Keys with write access are refused.
+
+The key is stored on the Pi in `data/healthchecks.json` and never sent to browsers or other devices. For a self-hosted Healthchecks, set `HEALTHCHECKS_API_URL` (e.g. `https://hc.example.com`) in the service settings, the same way as `DASHBOARD_PIN` above.
+
+The widget only displays. The alerts come from Healthchecks itself, so they still arrive when the Pi is down.

@@ -6,6 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { openDb } from './db.ts';
 import { applySync } from './sync.ts';
 import { MIN_PIN_LENGTH, loadSecret, registerAuth } from './auth.ts';
+import { registerHealthchecks } from './healthchecks.ts';
 import { getSystemStatus } from './system.ts';
 import { IcsError, fetchIcs } from './ics.ts';
 import { checkOnline, isValidHost, parseMac, sendWol } from './wol.ts';
@@ -36,6 +37,11 @@ const pinSource = auth.source();
 app.log.info(
   pinSource === 'env' ? 'PIN protection is on (DASHBOARD_PIN).' : pinSource === 'app' ? 'PIN protection is on (set in the app).' : 'PIN protection is off.',
 );
+
+registerHealthchecks(app, {
+  keyPath: join(dirname(DB_PATH), 'healthchecks.json'),
+  apiUrl: process.env.HEALTHCHECKS_API_URL || undefined,
+});
 
 const syncBodySchema = {
   type: 'object',

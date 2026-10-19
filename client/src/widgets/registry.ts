@@ -16,6 +16,7 @@ import { WeatherWidget } from './WeatherWidget.tsx';
 import { WasteWidget } from './WasteWidget.tsx';
 import { SystemWidget } from './SystemWidget.tsx';
 import { WakeWidget } from './WakeWidget.tsx';
+import { HealthWidget } from './HealthWidget.tsx';
 
 export interface WidgetDef {
   label: string;
@@ -40,4 +41,5 @@ export const WIDGETS: Record<WidgetType, WidgetDef> = {
   waste: { label: 'Waste collection', component: WasteWidget, size: { w: 3, h: 7, minW: 2, minH: 4 } },
   system: { label: 'Pi status', component: SystemWidget, size: { w: 3, h: 7, minW: 2, minH: 5 } },
   wake: { label: 'Wake PC (Wake-on-LAN)', component: WakeWidget, size: { w: 3, h: 4, minW: 2, minH: 3 } },
+  health: { label: 'Health checks (Healthchecks.io)', component: HealthWidget, size: { w: 3, h: 6, minW: 2, minH: 4 } },
 };
