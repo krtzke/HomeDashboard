@@ -68,4 +68,16 @@ Browser (PWA)                               Raspberry Pi
 
 ## Deploy to the Raspberry Pi
 
-See **[deploy/README.md](deploy/README.md)**. In short: push this repo to Git, clone it on the Pi, run `bash deploy/install.sh`, set up Caddy, and install the root certificate on your devices once.
+See **[deploy/README.md](deploy/README.md)**. In short: clone this repo on the Pi, run `bash deploy/install.sh`, then choose how your devices connect:
+
+- **Tailscale** *(recommended)*: HTTPS with offline mode, also away from home.
+- **Caddy**: HTTPS with offline mode, home network only. Each device needs a root certificate once.
+- **Plain HTTP**: everything works, but no offline mode or app install.
+
+HTTPS is only needed for offline mode, installing as an app and timer notifications. To update later, run `bash deploy/update.sh` on the Pi.
+
+Every installation starts empty. Your data (lists, events, notes…) lives only in `data/` on your own Pi and is never part of the repository.
+
+## License
+
+[MIT](LICENSE)

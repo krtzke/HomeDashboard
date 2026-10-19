@@ -4,16 +4,16 @@ import dgram from 'node:dgram';
 import { checkOnline, isValidHost, lanBroadcasts, magicPacket, parseMac, sendWol } from '../src/wol.ts';
 
 test('parses MAC addresses in common formats', () => {
-  const expected = Buffer.from('107c61448382', 'hex');
-  assert.deepEqual(parseMac('10-7C-61-44-83-82'), expected);
-  assert.deepEqual(parseMac('10:7c:61:44:83:82'), expected);
-  assert.deepEqual(parseMac('107C61448382'), expected);
-  assert.equal(parseMac('10-7C-61-44-83'), null);
-  assert.equal(parseMac('zz-7C-61-44-83-82'), null);
+  const expected = Buffer.from('aabbccddeeff', 'hex');
+  assert.deepEqual(parseMac('AA-BB-CC-DD-EE-FF'), expected);
+  assert.deepEqual(parseMac('aa:bb:cc:dd:ee:ff'), expected);
+  assert.deepEqual(parseMac('AABBCCDDEEFF'), expected);
+  assert.equal(parseMac('AA-BB-CC-DD-EE'), null);
+  assert.equal(parseMac('ZZ-BB-CC-DD-EE-FF'), null);
 });
 
 test('builds a magic packet', () => {
-  const mac = parseMac('10-7C-61-44-83-82')!;
+  const mac = parseMac('AA-BB-CC-DD-EE-FF')!;
   const p = magicPacket(mac);
   assert.equal(p.length, 102);
   assert.deepEqual(p.subarray(0, 6), Buffer.alloc(6, 0xff));
@@ -25,10 +25,10 @@ test('computes LAN broadcast addresses, skipping loopback and Tailscale', () => 
     ({ address, netmask, family: 'IPv4', internal, mac: '', cidr: null }) as never;
   const result = lanBroadcasts({
     lo: [iface('127.0.0.1', '255.0.0.0', true)],
-    eth0: [iface('192.168.2.56', '255.255.255.0')],
+    eth0: [iface('192.168.1.50', '255.255.255.0')],
     tailscale0: [iface('100.101.102.103', '255.255.255.255')],
   });
-  assert.deepEqual(result.sort(), ['192.168.2.255', '255.255.255.255']);
+  assert.deepEqual(result.sort(), ['192.168.1.255', '255.255.255.255']);
 });
 
 test('sends the magic packet over UDP', async () => {
@@ -36,14 +36,14 @@ test('sends the magic packet over UDP', async () => {
   await new Promise<void>((r) => receiver.bind(0, '127.0.0.1', () => r()));
   const { port } = receiver.address();
   const got = new Promise<Buffer>((r) => receiver.once('message', (msg) => r(msg)));
-  const mac = parseMac('10-7C-61-44-83-82')!;
+  const mac = parseMac('AA-BB-CC-DD-EE-FF')!;
   await sendWol(mac, ['127.0.0.1'], port);
   assert.deepEqual(await got, magicPacket(mac));
   receiver.close();
 });
 
 test('rejects hosts that could be command-line options', () => {
-  assert.ok(isValidHost('192.168.2.41'));
+  assert.ok(isValidHost('192.168.1.20'));
   assert.ok(isValidHost('desktop-pc.fritz.box'));
   assert.ok(!isValidHost('-c 100 x'));
   assert.ok(!isValidHost('a;rm -rf /'));

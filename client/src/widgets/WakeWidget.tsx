@@ -168,8 +168,8 @@ function AddDevice({ onAdd }: { onAdd: (d: Device) => void }) {
   return (
     <form className="inline-form" onSubmit={submit}>
       <input placeholder="Name, e.g. Gaming PC" value={name} onChange={(e) => setName(e.target.value)} />
-      <input placeholder="MAC address, e.g. 10-7C-61-44-83-82" value={mac} onChange={(e) => setMac(e.target.value)} required />
-      <input placeholder="IP for online status, e.g. 192.168.2.41 (optional)" value={host} onChange={(e) => setHost(e.target.value)} />
+      <input placeholder="MAC address, e.g. AA-BB-CC-DD-EE-FF" value={mac} onChange={(e) => setMac(e.target.value)} required />
+      <input placeholder="IP for online status, e.g. 192.168.1.20 (optional)" value={host} onChange={(e) => setHost(e.target.value)} />
       {mac && !macOk && <p className="error-text">That doesn't look like a MAC address (6 pairs of hex digits).</p>}
       {!hostOk && <p className="error-text">Enter an IP address or hostname.</p>}
       <p className="muted">

@@ -19,7 +19,7 @@ export function magicPacket(mac: Buffer): Buffer {
 
 /**
  * Broadcast addresses of the Pi's LAN interfaces (plus the global broadcast). Directed broadcasts
- * like 192.168.2.255 are more reliable than 255.255.255.255 once VPN interfaces (Tailscale) exist.
+ * like 192.168.1.255 are more reliable than 255.255.255.255 once VPN interfaces (Tailscale) exist.
  */
 export function lanBroadcasts(ifaces: NodeJS.Dict<os.NetworkInterfaceInfo[]> = os.networkInterfaces()): string[] {
   const out = new Set<string>(['255.255.255.255']);
