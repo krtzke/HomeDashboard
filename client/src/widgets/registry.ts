@@ -15,6 +15,7 @@ import { BirthdaysWidget } from './BirthdaysWidget.tsx';
 import { WeatherWidget } from './WeatherWidget.tsx';
 import { WasteWidget } from './WasteWidget.tsx';
 import { SystemWidget } from './SystemWidget.tsx';
+import { WakeWidget } from './WakeWidget.tsx';
 
 export interface WidgetDef {
   label: string;
@@ -38,4 +39,5 @@ export const WIDGETS: Record<WidgetType, WidgetDef> = {
   weather: { label: 'Weather', component: WeatherWidget, size: { w: 3, h: 9, minW: 2, minH: 5 } },
   waste: { label: 'Waste collection', component: WasteWidget, size: { w: 3, h: 7, minW: 2, minH: 4 } },
   system: { label: 'Pi status', component: SystemWidget, size: { w: 3, h: 7, minW: 2, minH: 5 } },
+  wake: { label: 'Wake PC (Wake-on-LAN)', component: WakeWidget, size: { w: 3, h: 4, minW: 2, minH: 3 } },
 };

@@ -84,7 +84,8 @@ export type WidgetType =
   | 'birthdays'
   | 'weather'
   | 'waste'
-  | 'system';
+  | 'system'
+  | 'wake';
 
 export type PageTheme = 'auto' | 'light' | 'dark';
 

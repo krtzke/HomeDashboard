@@ -6,6 +6,7 @@ import { openDb } from './db.ts';
 import { applySync } from './sync.ts';
 import { getSystemStatus } from './system.ts';
 import { IcsError, fetchIcs } from './ics.ts';
+import { checkOnline, isValidHost, parseMac, sendWol } from './wol.ts';
 import { SYNC_TABLES } from '../../shared/src/types.ts';
 import type { SyncRequest } from '../../shared/src/types.ts';
 
@@ -60,6 +61,27 @@ app.get<{ Querystring: { url: string } }>(
       if (err instanceof IcsError) return reply.code(err.status).send({ error: err.message });
       throw err;
     }
+  },
+);
+
+app.post<{ Body: { mac: string } }>(
+  '/api/wol',
+  { schema: { body: { type: 'object', required: ['mac'], properties: { mac: { type: 'string', maxLength: 32 } } } } },
+  async (req, reply) => {
+    const mac = parseMac(req.body.mac);
+    if (!mac) return reply.code(400).send({ error: 'Invalid MAC address' });
+    const sentTo = await sendWol(mac);
+    req.log.info({ mac: req.body.mac, sentTo }, 'Wake-on-LAN packet sent');
+    return { ok: true, sentTo };
+  },
+);
+
+app.get<{ Querystring: { host: string } }>(
+  '/api/online',
+  { schema: { querystring: { type: 'object', required: ['host'], properties: { host: { type: 'string', maxLength: 253 } } } } },
+  async (req, reply) => {
+    if (!isValidHost(req.query.host)) return reply.code(400).send({ error: 'Invalid host' });
+    return { online: await checkOnline(req.query.host) };
   },
 );
 
