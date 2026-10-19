@@ -95,7 +95,39 @@ Open `http://<pi-ip>:3000`. Everything works while the device can reach the Pi. 
 
 *Note:* `deploy/install.sh` rewrites the service file, so run the two commands again if you ever re-run the install script.
 
-## 4. Install as an app on your phone (options A and B)
+## 4. Optional: protect it with a PIN
+
+Without a PIN, anyone who can reach the dashboard can read and change everything, and wake your PCs. With Tailscale that's only your own devices. With Caddy or plain HTTP it's everyone on your home network, including guests on your Wi-Fi. A PIN closes that gap.
+
+**Set it in the app:** click ✎ Edit, then **🔒 PIN**. The same dialog changes or removes it, which asks for the current PIN. The PIN needs at least 4 characters. Letters work too, and 6 or more digits are better.
+
+> **Set it right after installing.** While no PIN is set, anyone who can reach the dashboard could set one and lock you out. If that happens, use *Forgot the PIN?* below.
+
+- **Each device asks for the PIN once.** It then stays logged in. Devices in regular use never need it again, and a device unused for a year asks again.
+- **Offline mode is unaffected.** The app itself loads without the PIN, and changes made while logged out are kept and sync after unlocking.
+- **Wrong guesses are slowed down.** After 5 wrong PINs, login pauses for 1 minute, then 2, 4… up to an hour per attempt. Devices that are already logged in keep working.
+- **Changing the PIN logs out every other device.** The device you changed it on stays logged in.
+
+**Forgot the PIN?** On the Pi, delete it and restart. The dashboard is then open again until you set a new one:
+
+```bash
+rm ~/HomeDashboard/data/pin.json && sudo systemctl restart homedashboard
+```
+
+The PIN is stored hashed in `data/pin.json`. Session cookies are signed with a random key in `data/session-secret`, and deleting that file logs out every device.
+
+**Alternative: fix the PIN on the Pi.** If you don't want the PIN to be changeable from the app, set it in a systemd override instead. This PIN takes precedence over one set in the app, and the app's dialog then only says where it's set. The override survives updates and re-running `install.sh`:
+
+```bash
+sudo mkdir -p /etc/systemd/system/homedashboard.service.d
+printf '[Service]\nEnvironment=DASHBOARD_PIN=%s\n' 'your-pin' | sudo tee /etc/systemd/system/homedashboard.service.d/pin.conf > /dev/null
+sudo chmod 600 /etc/systemd/system/homedashboard.service.d/pin.conf
+sudo systemctl daemon-reload && sudo systemctl restart homedashboard
+```
+
+To change it, edit `pin.conf` and run the last command again. To remove it, delete `pin.conf` and do the same. `journalctl -u homedashboard | grep PIN` shows whether protection is on and where the PIN comes from.
+
+## 5. Install as an app on your phone (options A and B)
 
 - **Android (Chrome):** menu ⋮ → *Add to Home screen / Install app*.
 - **iPhone (Safari):** Share → *Add to Home Screen*.

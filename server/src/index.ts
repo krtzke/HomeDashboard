@@ -1,9 +1,11 @@
 import Fastify from 'fastify';
 import fastifyStatic from '@fastify/static';
 import { existsSync } from 'node:fs';
+import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { openDb } from './db.ts';
 import { applySync } from './sync.ts';
+import { MIN_PIN_LENGTH, loadSecret, registerAuth } from './auth.ts';
 import { getSystemStatus } from './system.ts';
 import { IcsError, fetchIcs } from './ics.ts';
 import { checkOnline, isValidHost, parseMac, sendWol } from './wol.ts';
@@ -15,9 +17,25 @@ const PORT = Number(process.env.PORT ?? 3000);
 const HOST = process.env.HOST ?? '127.0.0.1';
 const DB_PATH = process.env.DB_PATH ?? fileURLToPath(new URL('../../data/dashboard.db', import.meta.url));
 const CLIENT_DIST = fileURLToPath(new URL('../../client/dist', import.meta.url));
+const PIN = process.env.DASHBOARD_PIN?.trim() ?? '';
 
 const db = openDb(DB_PATH);
 const app = Fastify({ logger: { level: process.env.LOG_LEVEL ?? 'info' }, bodyLimit: 5 * 1024 * 1024 });
+
+if (PIN && PIN.length < MIN_PIN_LENGTH) {
+  app.log.error(`DASHBOARD_PIN must have at least ${MIN_PIN_LENGTH} characters.`);
+  process.exit(1);
+}
+// Registered before all routes so its hook guards every /api route.
+const auth = registerAuth(app, {
+  secret: loadSecret(join(dirname(DB_PATH), 'session-secret')),
+  envPin: PIN || undefined,
+  pinPath: join(dirname(DB_PATH), 'pin.json'),
+});
+const pinSource = auth.source();
+app.log.info(
+  pinSource === 'env' ? 'PIN protection is on (DASHBOARD_PIN).' : pinSource === 'app' ? 'PIN protection is on (set in the app).' : 'PIN protection is off.',
+);
 
 const syncBodySchema = {
   type: 'object',

@@ -25,6 +25,7 @@ A self-hosted start page for the household, running on a Raspberry Pi. It has re
   - **📄** on a widget moves it to another page.
   - Deleting a page never deletes widgets: they move to the first page.
   - The current page is remembered per device, and each page has its own URL (`#…`), e.g. to bookmark "Kitchen" on a wall tablet.
+- **Optional PIN**: In ✎ Edit mode, **🔒 PIN** sets, changes or removes a household PIN. Each device then has to enter it once before it can sync, and changing it logs out every other device. It can also be fixed on the Pi instead. See [deploy/README.md](deploy/README.md#4-optional-protect-it-with-a-pin).
 - **Offline + sync**: All data is stored in the browser (IndexedDB) first. The sync button shows the state and the number of pending changes, and the app syncs automatically on reconnect, when opened, and every 30 s.
 
 ## Development (Windows/macOS/Linux)
@@ -60,7 +61,7 @@ Browser (PWA)                               Raspberry Pi
 | Path | Contents |
 |---|---|
 | `shared/src/types.ts` | Record and sync types used by both sides |
-| `server/src/` | Fastify server, SQLite migrations (`db.ts`), sync logic (`sync.ts`) |
+| `server/src/` | Fastify server, SQLite migrations (`db.ts`), sync logic (`sync.ts`), optional PIN (`auth.ts`) |
 | `server/test/` | Sync tests (`node --test`) |
 | `client/src/db.ts`, `data.ts`, `sync.ts` | Local DB, write helpers (stamp + outbox), sync engine |
 | `client/src/widgets/` | Widgets + `registry.ts`. Register a new widget type there |
@@ -73,6 +74,8 @@ See **[deploy/README.md](deploy/README.md)**. In short: clone this repo on the P
 - **Tailscale** *(recommended)*: HTTPS with offline mode, also away from home.
 - **Caddy**: HTTPS with offline mode, home network only. Each device needs a root certificate once.
 - **Plain HTTP**: everything works, but no offline mode or app install.
+
+Anyone who can reach the dashboard can use it. If that includes guests on your Wi-Fi, [set a PIN](deploy/README.md#4-optional-protect-it-with-a-pin).
 
 HTTPS is only needed for offline mode, installing as an app and timer notifications. To update later, run `bash deploy/update.sh` on the Pi.
 

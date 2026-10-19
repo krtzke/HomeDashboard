@@ -7,6 +7,8 @@ import { syncNow, useSyncStatus } from './sync.ts';
 import { COLS, findFreeSlot } from './layout.ts';
 import { pageIdOf, sortPages, widgetsOnPage } from './pages.ts';
 import { PageSettings, PageTabs, useActivePage, usePageTheme } from './PageBar.tsx';
+import { PinScreen } from './PinScreen.tsx';
+import { PinSettings } from './PinSettings.tsx';
 import { WIDGETS } from './widgets/registry.ts';
 import { WidgetContext } from './widgets/WidgetFrame.tsx';
 import type { ListRec, PageRec, WidgetRec, WidgetType } from '../../shared/src/types.ts';
@@ -18,7 +20,9 @@ export function App() {
   const allWidgets = useLiveQuery(() => db.widgets.filter((w) => !w.deleted).toArray(), []);
   const pages = useLiveQuery(() => db.pages.filter((p) => !p.deleted).toArray(), [], [] as PageRec[]);
   const [editing, setEditing] = useState(false);
+  const [pinOpen, setPinOpen] = useState(false);
   const [page, selectPage, pagePending] = useActivePage(pages);
+  const locked = useSyncStatus().state === 'locked';
   usePageTheme(page);
 
   const widgets = widgetsOnPage(allWidgets ?? [], pages, page?.id ?? null);
@@ -34,6 +38,7 @@ export function App() {
       <header className="topbar">
         <h1>{page ? `${page.icon} ${page.name}` : '🏠 Home'}</h1>
         <SyncIndicator />
+        {editing && <button onClick={() => setPinOpen(true)}>🔒 PIN</button>}
         <button className={editing ? 'primary' : ''} onClick={() => setEditing((e) => !e)}>
           {editing ? 'Done' : '✎ Edit'}
         </button>
@@ -51,6 +56,8 @@ export function App() {
         currentPageId={page?.id ?? null}
         onMoveToPage={moveToPage}
       />
+      {pinOpen && <PinSettings onClose={() => setPinOpen(false)} />}
+      {locked && <PinScreen />}
     </div>
   );
 }
@@ -66,9 +73,11 @@ function SyncIndicator() {
         ? `Offline${pending ? ` · ${pending} pending` : ''}`
         : status.state === 'error'
           ? 'Sync error'
-          : pending
-            ? `${pending} pending`
-            : 'Synced';
+          : status.state === 'locked'
+            ? '🔒 Locked'
+            : pending
+              ? `${pending} pending`
+              : 'Synced';
   const title =
     status.error ?? (status.lastSync ? `Last sync ${new Date(status.lastSync).toLocaleTimeString()}` : 'Not synced yet');
 

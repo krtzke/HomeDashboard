@@ -4,7 +4,8 @@ import { db, getMeta, setMeta } from './db.ts';
 import { SYNC_TABLES } from '../../shared/src/types.ts';
 import type { Change, SyncRequest, SyncResponse } from '../../shared/src/types.ts';
 
-export type SyncState = 'idle' | 'syncing' | 'offline' | 'error';
+/** 'locked': the server has a PIN and this device has no valid session. */
+export type SyncState = 'idle' | 'syncing' | 'offline' | 'error' | 'locked';
 
 export interface SyncStatus {
   state: SyncState;
@@ -30,6 +31,12 @@ export function useSyncStatus(): SyncStatus {
     () => status,
   );
 }
+
+export function getSyncStatus(): SyncStatus {
+  return status;
+}
+
+class LockedError extends Error {}
 
 let running: Promise<void> | null = null;
 let rerun = false;
@@ -78,6 +85,10 @@ async function runSync() {
     }
     setStatus({ state: 'idle', lastSync: Date.now() });
   } catch (err) {
+    if (err instanceof LockedError) {
+      setStatus({ state: 'locked' });
+      return;
+    }
     const offline = err instanceof TypeError || (err as Error).name === 'AbortError';
     setStatus(offline ? { state: 'offline' } : { state: 'error', error: (err as Error).message });
   }
@@ -90,6 +101,7 @@ async function post(body: SyncRequest): Promise<SyncResponse> {
     body: JSON.stringify(body),
     signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
   });
+  if (res.status === 401) throw new LockedError();
   if (res.status === 502 || res.status === 503 || res.status === 504) throw new TypeError('Server unreachable');
   if (!res.ok) throw new Error(`Sync failed: HTTP ${res.status}`);
   return res.json();
