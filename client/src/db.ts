@@ -1,5 +1,5 @@
 import Dexie, { type EntityTable } from 'dexie';
-import type { BirthdayRec, ChoreRec, EventRec, ItemRec, ListRec, NoteRec, SyncTable, WidgetRec } from '../../shared/src/types.ts';
+import type { BirthdayRec, ChoreRec, EventRec, ItemRec, ListRec, NoteRec, PageRec, SyncTable, WidgetRec } from '../../shared/src/types.ts';
 
 /** A pending local change that still has to be pushed to the server. */
 export interface OutboxEntry {
@@ -36,6 +36,7 @@ class DashboardDB extends Dexie {
   notes!: EntityTable<NoteRec, 'id'>;
   chores!: EntityTable<ChoreRec, 'id'>;
   birthdays!: EntityTable<BirthdayRec, 'id'>;
+  pages!: EntityTable<PageRec, 'id'>;
   outbox!: EntityTable<OutboxEntry, 'key'>;
   meta!: EntityTable<MetaEntry, 'key'>;
   timers!: EntityTable<TimerRec, 'id'>;
@@ -53,6 +54,7 @@ class DashboardDB extends Dexie {
     });
     this.version(2).stores({ notes: 'id' });
     this.version(3).stores({ chores: 'id, widgetId', birthdays: 'id' });
+    this.version(4).stores({ pages: 'id' });
   }
 }
 

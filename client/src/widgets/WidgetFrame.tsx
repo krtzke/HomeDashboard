@@ -2,7 +2,7 @@ import { createContext, useContext, useState, type CSSProperties, type ReactNode
 import { COLOR_HEX } from '../colors.ts';
 import { useWidgetConfig } from './config.ts';
 import { EVENT_COLORS } from '../../../shared/src/types.ts';
-import type { EventColor, WidgetRec } from '../../../shared/src/types.ts';
+import type { EventColor, PageRec, WidgetRec } from '../../../shared/src/types.ts';
 
 export interface WidgetProps {
   widget: WidgetRec;
@@ -15,6 +15,9 @@ export interface WidgetContextValue {
   widget: WidgetRec;
   collapsed: boolean;
   toggleCollapsed: () => void;
+  /** Pages this widget can be moved to. */
+  otherPages: PageRec[];
+  moveToPage: (pageId: string) => Promise<void>;
 }
 
 export const WidgetContext = createContext<WidgetContextValue | null>(null);
@@ -38,6 +41,7 @@ export function WidgetFrame({ title, icon, editing, onRemove, onSettings, settin
   const widget = ctx?.widget;
   const collapsed = ctx?.collapsed ?? false;
   const [picking, setPicking] = useState(false);
+  const [moving, setMoving] = useState(false);
   const headerColor = (widget?.config.headerColor as EventColor | undefined) || null;
   const style = headerColor ? ({ '--header-color': COLOR_HEX[headerColor] } as CSSProperties) : undefined;
   const cls = ['widget', headerColor && 'has-header-color', collapsed && 'collapsed'].filter(Boolean).join(' ');
@@ -72,6 +76,11 @@ export function WidgetFrame({ title, icon, editing, onRemove, onSettings, settin
               🎨
             </button>
           )}
+          {editing && ctx && ctx.otherPages.length > 0 && (
+            <button className={`icon-btn${moving ? ' active' : ''}`} title="Move to page" onClick={() => setMoving((m) => !m)}>
+              📄
+            </button>
+          )}
           {editing && (
             <button className="icon-btn danger" title="Remove widget" onClick={onRemove}>
               ✕
@@ -80,6 +89,16 @@ export function WidgetFrame({ title, icon, editing, onRemove, onSettings, settin
         </div>
       </header>
       {editing && picking && widget && <HeaderColorPicker widget={widget} current={headerColor} onDone={() => setPicking(false)} />}
+      {editing && moving && ctx && (
+        <div className="header-colors move-to">
+          <span className="muted">Move to:</span>
+          {ctx.otherPages.map((p) => (
+            <button key={p.id} className="small" onClick={() => void ctx.moveToPage(p.id)}>
+              {p.icon} {p.name}
+            </button>
+          ))}
+        </div>
+      )}
       <div className="widget-body">{children}</div>
       {footer && <footer className="widget-footer">{footer}</footer>}
     </section>

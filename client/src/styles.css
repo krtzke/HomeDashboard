@@ -6,19 +6,25 @@
   --text: #1f2328;
   --muted: #6e7781;
   --accent: #1f6feb;
-  --accent-soft: #ddeaff;
+  /* Derived from the accent, so a page's accent color also tints selections and highlights */
+  --accent-soft: color-mix(in srgb, var(--accent) 16%, var(--surface));
   --danger: #cf222e;
   --ok: #1a7f37;
   --warn: #bf8700;
   --radius: 12px;
   --shadow: 0 1px 2px rgb(0 0 0 / 0.06), 0 2px 8px rgb(0 0 0 / 0.04);
-  color-scheme: light dark;
+  color-scheme: light;
   font-family: system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
   font-size: 15px;
 }
 
+/*
+ * Dark palette: follows the system ("auto", no data-theme) unless the page forces a theme
+ * via <html data-theme="light|dark"> (set by usePageTheme). The block is repeated because
+ * CSS can't share one rule between a media query and an attribute selector.
+ */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme='light']) {
     --bg: #0d1117;
     --surface: #161b22;
     --surface-2: #1f262e;
@@ -26,12 +32,28 @@
     --text: #e6edf3;
     --muted: #8d96a0;
     --accent: #4493f8;
-    --accent-soft: #1b2f4d;
+    --accent-soft: color-mix(in srgb, var(--accent) 24%, var(--surface));
     --danger: #f85149;
     --ok: #3fb950;
     --warn: #d29922;
     --shadow: none;
+    color-scheme: dark;
   }
+}
+:root[data-theme='dark'] {
+  --bg: #0d1117;
+  --surface: #161b22;
+  --surface-2: #1f262e;
+  --border: #30363d;
+  --text: #e6edf3;
+  --muted: #8d96a0;
+  --accent: #4493f8;
+  --accent-soft: color-mix(in srgb, var(--accent) 24%, var(--surface));
+  --danger: #f85149;
+  --ok: #3fb950;
+  --warn: #d29922;
+  --shadow: none;
+  color-scheme: dark;
 }
 
 * {
@@ -174,6 +196,88 @@ textarea:focus {
   to {
     transform: rotate(360deg);
   }
+}
+
+/* ---------- Pages ---------- */
+.page-tabs {
+  display: flex;
+  gap: 0.3rem;
+  margin-bottom: 12px;
+  overflow-x: auto;
+  scrollbar-width: none;
+  border-bottom: 1px solid var(--border);
+}
+.page-tab {
+  border: none;
+  border-bottom: 3px solid transparent;
+  border-radius: 8px 8px 0 0;
+  background: transparent;
+  padding: 0.45rem 0.85rem;
+  white-space: nowrap;
+  color: var(--muted);
+}
+.page-tab.active {
+  color: var(--text);
+  font-weight: 600;
+  border-bottom-color: var(--accent);
+}
+.page-tab.add {
+  color: var(--accent);
+}
+.page-settings {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem 1rem;
+  padding: 0.6rem;
+  margin-bottom: 8px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.ps-group {
+  display: flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.ps-name {
+  width: 11rem;
+}
+.page-settings .emoji-input {
+  width: 3rem;
+  text-align: center;
+}
+.segmented {
+  gap: 0;
+}
+.segmented button {
+  border-radius: 0;
+  font-size: 0.85rem;
+  padding: 0.3rem 0.6rem;
+}
+.segmented button:first-child {
+  border-radius: 8px 0 0 8px;
+}
+.segmented button:last-child {
+  border-radius: 0 8px 8px 0;
+}
+.segmented button + button {
+  border-left: none;
+}
+.segmented button.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+.swatch.default-accent {
+  background: linear-gradient(135deg, #1f6feb 50%, #4493f8 50%);
+}
+.move-to {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.85rem;
 }
 
 .add-bar {

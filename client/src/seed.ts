@@ -3,7 +3,9 @@
 // and any later edit/deletion on the server always wins over the seed.
 import { db, getMeta, setMeta } from './db.ts';
 import { scheduleSync } from './sync.ts';
-import type { ListRec, SyncTable, WidgetRec } from '../../shared/src/types.ts';
+import { putRecords } from './data.ts';
+import { DEFAULT_PAGE_ID } from './pages.ts';
+import type { ListRec, PageRec, SyncTable, WidgetRec } from '../../shared/src/types.ts';
 
 const base = { updatedAt: 1, deleted: false };
 
@@ -36,6 +38,27 @@ export async function seedIfEmpty() {
       await put('widgets', widgets);
     }
     await setMeta('seeded', true);
+  });
+  scheduleSync();
+}
+
+const defaultPage: PageRec = { ...base, id: DEFAULT_PAGE_ID, name: 'Home', icon: '🏠', sortOrder: 0, theme: 'auto', accent: '' };
+
+/**
+ * Makes sure at least one page exists (runs on every start, also for installs from before pages existed).
+ * Existing widgets without a page then show on this default page.
+ */
+export async function ensureDefaultPage() {
+  if ((await db.pages.filter((p) => !p.deleted).count()) > 0) return;
+  const existing = await db.pages.get(DEFAULT_PAGE_ID);
+  if (existing) {
+    // All pages got deleted (e.g. concurrently on two devices): bring the default page back.
+    await putRecords('pages', [{ ...existing, deleted: false }]);
+    return;
+  }
+  await db.transaction('rw', db.pages, db.outbox, async () => {
+    await db.pages.put(defaultPage);
+    await db.outbox.put({ key: `pages:${DEFAULT_PAGE_ID}`, table: 'pages', id: DEFAULT_PAGE_ID, updatedAt: 1 });
   });
   scheduleSync();
 }

@@ -19,6 +19,11 @@ A self-hosted start page for the household, running on a Raspberry Pi. It has re
 - **Pi status**: CPU temperature, load, memory, disk, uptime and the Pi's under-voltage/throttling flags (`vcgencmd`).
 - **Timers**: Presets or custom durations (`5`, `5:30`, `1:00:00`), with sound, notification and vibration. Timers belong to the device that started them and don't sync.
 - **Layout**: *✎ Edit* lets you drag widgets by their header, resize them, add and remove them, and give each header a color (🎨). ▾/▸ in a header collapses a widget to just its header. This is remembered per device, and collapsed widgets keep working, so timers still ring. The layout syncs to all devices. Phones show the widgets in one column.
+- **Pages**: Tabs such as "Home", "Kitchen" or "Work", each with its own widgets. In ✎ Edit mode:
+  - **＋ Page** adds one. The settings bar sets name, emoji, **theme** (Auto/Light/Dark) and **accent color** per page, reorders (←/→) and deletes.
+  - **📄** on a widget moves it to another page.
+  - Deleting a page never deletes widgets: they move to the first page.
+  - The current page is remembered per device, and each page has its own URL (`#…`), e.g. to bookmark "Kitchen" on a wall tablet.
 - **Offline + sync**: All data is stored in the browser (IndexedDB) first. The sync button shows the state and the number of pending changes, and the app syncs automatically on reconnect, when opened, and every 30 s.
 
 ## Development (Windows/macOS/Linux)

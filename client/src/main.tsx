@@ -6,7 +6,7 @@ import 'react-resizable/css/styles.css';
 import './styles.css';
 import './widgets.css';
 import { App } from './App.tsx';
-import { seedIfEmpty } from './seed.ts';
+import { ensureDefaultPage, seedIfEmpty } from './seed.ts';
 import { startAutoSync, syncNow } from './sync.ts';
 
 registerSW({ immediate: true });
@@ -19,4 +19,7 @@ createRoot(document.getElementById('root')!).render(
 
 // Pull from the server first so a new device gets the existing dashboard instead of seeding one.
 startAutoSync();
-void syncNow().finally(seedIfEmpty);
+void syncNow().finally(async () => {
+  await seedIfEmpty();
+  await ensureDefaultPage();
+});

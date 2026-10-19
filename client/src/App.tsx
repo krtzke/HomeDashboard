@@ -2,31 +2,55 @@ import { useState } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
 import ReactGridLayout, { useContainerWidth, type Layout } from 'react-grid-layout';
 import { db } from './db.ts';
-import { create, putRecords, remove } from './data.ts';
+import { create, putRecords, remove, update } from './data.ts';
 import { syncNow, useSyncStatus } from './sync.ts';
+import { COLS, findFreeSlot } from './layout.ts';
+import { pageIdOf, sortPages, widgetsOnPage } from './pages.ts';
+import { PageSettings, PageTabs, useActivePage, usePageTheme } from './PageBar.tsx';
 import { WIDGETS } from './widgets/registry.ts';
 import { WidgetContext } from './widgets/WidgetFrame.tsx';
-import type { ListRec, WidgetRec, WidgetType } from '../../shared/src/types.ts';
+import type { ListRec, PageRec, WidgetRec, WidgetType } from '../../shared/src/types.ts';
 
-const COLS = 12;
 const ROW_HEIGHT = 40;
 const MOBILE_BREAKPOINT = 760;
 
 export function App() {
-  const widgets = useLiveQuery(() => db.widgets.filter((w) => !w.deleted).toArray(), [], [] as WidgetRec[]);
+  const allWidgets = useLiveQuery(() => db.widgets.filter((w) => !w.deleted).toArray(), []);
+  const pages = useLiveQuery(() => db.pages.filter((p) => !p.deleted).toArray(), [], [] as PageRec[]);
   const [editing, setEditing] = useState(false);
+  const [page, selectPage, pagePending] = useActivePage(pages);
+  usePageTheme(page);
+
+  const widgets = widgetsOnPage(allWidgets ?? [], pages, page?.id ?? null);
+
+  /** Moves a widget to another page, into the first free spot there. */
+  async function moveToPage(w: WidgetRec, targetId: string) {
+    const there = (allWidgets ?? []).filter((o) => o.id !== w.id && pageIdOf(o, pages) === targetId);
+    await update('widgets', w.id, { pageId: targetId, ...findFreeSlot(there, w.w, w.h) });
+  }
 
   return (
     <div className="app">
       <header className="topbar">
-        <h1>🏠 Home</h1>
+        <h1>{page ? `${page.icon} ${page.name}` : '🏠 Home'}</h1>
         <SyncIndicator />
         <button className={editing ? 'primary' : ''} onClick={() => setEditing((e) => !e)}>
           {editing ? 'Done' : '✎ Edit'}
         </button>
       </header>
-      {editing && <AddWidgetBar widgets={widgets} />}
-      <Dashboard widgets={widgets} editing={editing} />
+      <PageTabs pages={pages} active={page} editing={editing} onSelect={selectPage} />
+      {editing && page && !pagePending && (
+        <PageSettings key={page.id} page={page} pages={pages} widgets={allWidgets ?? []} onSelect={selectPage} />
+      )}
+      {editing && <AddWidgetBar widgets={widgets} pageId={page?.id} />}
+      <Dashboard
+        widgets={widgets}
+        loading={allWidgets === undefined}
+        editing={editing}
+        pages={sortPages(pages)}
+        currentPageId={page?.id ?? null}
+        onMoveToPage={moveToPage}
+      />
     </div>
   );
 }
@@ -80,7 +104,16 @@ function useCollapsedWidgets() {
   return [collapsed, toggle] as const;
 }
 
-function Dashboard({ widgets, editing }: { widgets: WidgetRec[]; editing: boolean }) {
+interface DashboardProps {
+  widgets: WidgetRec[];
+  loading: boolean;
+  editing: boolean;
+  pages: PageRec[];
+  currentPageId: string | null;
+  onMoveToPage: (w: WidgetRec, pageId: string) => Promise<void>;
+}
+
+function Dashboard({ widgets, loading, editing, pages, currentPageId, onMoveToPage }: DashboardProps) {
   const { width, containerRef, mounted } = useContainerWidth();
   const mobile = width < MOBILE_BREAKPOINT;
   const [collapsed, toggleCollapsed] = useCollapsedWidgets();
@@ -105,7 +138,15 @@ function Dashboard({ widgets, editing }: { widgets: WidgetRec[]; editing: boolea
   const render = (w: WidgetRec) => {
     const Component = WIDGETS[w.type]?.component;
     return Component ? (
-      <WidgetContext.Provider value={{ widget: w, collapsed: collapsed.has(w.id), toggleCollapsed: () => toggleCollapsed(w.id) }}>
+      <WidgetContext.Provider
+        value={{
+          widget: w,
+          collapsed: collapsed.has(w.id),
+          toggleCollapsed: () => toggleCollapsed(w.id),
+          otherPages: pages.filter((p) => p.id !== currentPageId),
+          moveToPage: (pageId) => onMoveToPage(w, pageId),
+        }}
+      >
         <Component widget={w} editing={editing} onRemove={() => removeWidget(w)} />
       </WidgetContext.Provider>
     ) : null;
@@ -114,7 +155,9 @@ function Dashboard({ widgets, editing }: { widgets: WidgetRec[]; editing: boolea
   // The container must always render so useContainerWidth can measure it.
   return (
     <main ref={containerRef} className="dashboard">
-      {!widgets.length && <p className="empty-dashboard">Loading… (or click Edit to add widgets)</p>}
+      {!widgets.length && (
+        <p className="empty-dashboard">{loading ? 'Loading…' : editing ? 'This page is empty — add a widget above.' : 'This page is empty — click ✎ Edit to add widgets.'}</p>
+      )}
       {mounted && mobile && (
         // On phones: one column, ordered like the desktop layout (top-to-bottom, left-to-right).
         <div className="stack">
@@ -151,20 +194,7 @@ async function removeWidget(w: WidgetRec) {
   await remove('widgets', [w.id]);
 }
 
-/** Top-most, then left-most position where a w×h widget fits without overlapping others. */
-function findFreeSlot(widgets: WidgetRec[], w: number, h: number): { x: number; y: number } {
-  const overlaps = (x: number, y: number) =>
-    widgets.some((o) => x < o.x + o.w && o.x < x + w && y < o.y + o.h && o.y < y + h);
-  const bottom = widgets.reduce((max, o) => Math.max(max, o.y + o.h), 0);
-  for (let y = 0; y <= bottom; y++) {
-    for (let x = 0; x + w <= COLS; x++) {
-      if (!overlaps(x, y)) return { x, y };
-    }
-  }
-  return { x: 0, y: bottom };
-}
-
-function AddWidgetBar({ widgets }: { widgets: WidgetRec[] }) {
+function AddWidgetBar({ widgets, pageId }: { widgets: WidgetRec[]; pageId?: string }) {
   const [type, setType] = useState<WidgetType>('list');
   const [name, setName] = useState('');
   const [listKind, setListKind] = useState<ListRec['kind']>('shopping');
@@ -180,7 +210,7 @@ function AddWidgetBar({ widgets }: { widgets: WidgetRec[] }) {
       config.noteId = await create('notes', { title: name.trim() || 'Notes', text: '' });
     }
     setName('');
-    await create('widgets', { type, config, x, y, w, h });
+    await create('widgets', { type, config, x, y, w, h, ...(pageId && { pageId }) });
   }
 
   return (

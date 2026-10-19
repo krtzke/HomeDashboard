@@ -1,7 +1,7 @@
 // Types shared between client and server.
 // Every synced record carries the same sync fields; the server treats the rest as opaque JSON.
 
-export const SYNC_TABLES = ['lists', 'items', 'events', 'widgets', 'notes', 'chores', 'birthdays'] as const;
+export const SYNC_TABLES = ['lists', 'items', 'events', 'widgets', 'notes', 'chores', 'birthdays', 'pages'] as const;
 export type SyncTable = (typeof SYNC_TABLES)[number];
 
 export interface SyncFields {
@@ -86,8 +86,23 @@ export type WidgetType =
   | 'waste'
   | 'system';
 
+export type PageTheme = 'auto' | 'light' | 'dark';
+
+/** A dashboard page (tab) with its own widgets and theme. */
+export interface PageRec extends SyncFields {
+  name: string;
+  /** Emoji shown in the tab. */
+  icon: string;
+  sortOrder: number;
+  theme: PageTheme;
+  /** Accent color; '' = default blue. */
+  accent: EventColor | '';
+}
+
 export interface WidgetRec extends SyncFields {
   type: WidgetType;
+  /** Page the widget lives on. Missing (older widgets) or unknown = the default page. */
+  pageId?: string;
   /** Per-widget settings; each widget type defines its own shape (see client/src/widgets/config.ts). */
   config: { listId?: string; noteId?: string; title?: string; [key: string]: unknown };
   x: number;
@@ -104,6 +119,7 @@ export interface RecordByTable {
   notes: NoteRec;
   chores: ChoreRec;
   birthdays: BirthdayRec;
+  pages: PageRec;
 }
 
 export interface Change<T extends SyncTable = SyncTable> {
