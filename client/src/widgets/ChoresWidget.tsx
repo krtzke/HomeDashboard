@@ -1,24 +1,30 @@
 import { useState, type FormEvent } from 'react';
 import { useLiveQuery } from 'dexie-react-hooks';
-import { addDays, differenceInCalendarDays } from 'date-fns';
+import { differenceInCalendarDays, format } from 'date-fns';
 import { db } from '../db.ts';
 import { create, remove, update } from '../data.ts';
-import { fromDateStr, toDateStr } from '../dates.ts';
+import { fromDateStr, toDateStr, useNow } from '../dates.ts';
+import { choreStatus, type ChoreStatus } from '../chores.ts';
 import { useWidgetConfig } from './config.ts';
 import { WidgetFrame, type WidgetProps } from './WidgetFrame.tsx';
 import type { ChoreRec, WidgetRec } from '../../../shared/src/types.ts';
 
-function dueIn(chore: ChoreRec, today: string): number {
-  if (!chore.lastDone) return 0;
-  const due = addDays(fromDateStr(chore.lastDone), chore.intervalDays);
-  return differenceInCalendarDays(due, fromDateStr(today));
+/** Overdue first, then due, then done. */
+const RANK: Record<ChoreStatus['state'], number> = { overdue: 0, due: 1, done: 2 };
+
+function statusText(s: ChoreStatus, everDone: boolean): string {
+  if (s.state === 'done') return 'Done ✓';
+  if (s.state === 'overdue') return `${s.overdueBy} ${s.unit === 'weeks' ? 'week' : 'day'}${s.overdueBy === 1 ? '' : 's'} overdue`;
+  if (!everDone) return 'Due now';
+  return s.unit === 'weeks' ? 'Due this week' : 'Due today';
 }
 
-function status(days: number): [string, string] {
-  if (days < 0) return [`${-days} day${days === -1 ? '' : 's'} overdue`, 'overdue'];
-  if (days === 0) return ['Due today', 'due'];
-  if (days === 1) return ['Tomorrow', ''];
-  return [`in ${days} days`, ''];
+/** When a checked chore unchecks itself: "tonight", "Sunday night" or a date. */
+function resetText(resetsAfter: string, today: string): string {
+  const days = differenceInCalendarDays(fromDateStr(resetsAfter), fromDateStr(today));
+  if (days <= 0) return 'tonight';
+  if (days < 7) return `${format(fromDateStr(resetsAfter), 'EEEE')} night`;
+  return format(fromDateStr(resetsAfter), 'd MMM');
 }
 
 function every(n: number) {
@@ -36,15 +42,18 @@ export async function cleanupChores(w: WidgetRec): Promise<boolean> {
 }
 
 export function ChoresWidget({ widget, editing, onRemove }: WidgetProps) {
-  const today = toDateStr(new Date());
+  // Re-render every minute, so chores reset at midnight even if nothing else changes.
+  const today = toDateStr(new Date(useNow(60_000)));
   const chores = useLiveQuery(
     () => db.chores.where('widgetId').equals(widget.id).filter((c) => !c.deleted).toArray(),
     [widget.id],
     [] as ChoreRec[],
   );
   const [adding, setAdding] = useState(false);
-  const sorted = [...chores].sort((a, b) => dueIn(a, today) - dueIn(b, today) || a.title.localeCompare(b.title));
-  const dueCount = chores.filter((c) => dueIn(c, today) <= 0 && c.lastDone !== today).length;
+  const sorted = chores
+    .map((c) => ({ c, s: choreStatus(c, today) }))
+    .sort((a, b) => RANK[a.s.state] - RANK[b.s.state] || a.c.title.localeCompare(b.c.title));
+  const dueCount = sorted.filter(({ s }) => s.state !== 'done').length;
   const [config, setConfig] = useWidgetConfig(widget, { title: 'Chores' });
   const name = config.title || 'Chores';
 
@@ -80,12 +89,11 @@ export function ChoresWidget({ widget, editing, onRemove }: WidgetProps) {
     >
       {adding && <AddChore widgetId={widget.id} onDone={() => setAdding(false)} />}
       <ul className="chores">
-        {sorted.map((c) => {
-          const doneToday = c.lastDone === today;
-          const [text, cls] = status(dueIn(c, today));
+        {sorted.map(({ c, s }) => {
+          const done = s.state === 'done';
           return (
-            <li key={c.id} className={doneToday ? 'done' : cls}>
-              {doneToday ? (
+            <li key={c.id} className={s.state}>
+              {done ? (
                 <button className="chore-check checked" title="Undo" onClick={() => undo(c)}>
                   ✓
                 </button>
@@ -96,10 +104,12 @@ export function ChoresWidget({ widget, editing, onRemove }: WidgetProps) {
                 <span className="chore-title">{c.title}</span>
                 <span className="chore-every">
                   {every(c.intervalDays)}
-                  {c.lastDone && !doneToday && ` · last ${differenceInCalendarDays(fromDateStr(today), fromDateStr(c.lastDone))}d ago`}
+                  {s.state === 'done'
+                    ? ` · resets ${resetText(s.resetsAfter, today)}`
+                    : c.lastDone && ` · last ${differenceInCalendarDays(fromDateStr(today), fromDateStr(c.lastDone))}d ago`}
                 </span>
               </span>
-              <span className={`chore-status ${cls}`}>{doneToday ? 'Done ✓' : c.lastDone ? text : 'Due now'}</span>
+              <span className={`chore-status ${s.state}`}>{statusText(s, c.lastDone !== null)}</span>
               {editing && (
                 <button className="icon-btn subtle" title="Delete chore" onClick={() => remove('chores', [c.id])}>
                   ✕
@@ -147,7 +157,8 @@ function AddChore({ widgetId, onDone }: { widgetId: string; onDone: () => void }
       </div>
       <div className="row">
         <label className="check">
-          <input type="checkbox" checked={doneToday} onChange={(e) => setDoneToday(e.target.checked)} /> Already done today
+          <input type="checkbox" checked={doneToday} onChange={(e) => setDoneToday(e.target.checked)} /> Already done{' '}
+          {unit === 'weeks' ? 'this week' : 'today'}
         </label>
         <button type="submit" className="primary push-right">
           Add

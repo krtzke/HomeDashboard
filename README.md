@@ -12,7 +12,7 @@ A self-hosted start page for the household, running on a Raspberry Pi. It has re
 - **Clock & date**: Large time, date and calendar week. ⚙ adds seconds and an optional second time zone.
 - **Countdown**: Days until dates you add (＋, with an emoji). ⚙ can also count down to calendar events of one color.
 - **Quick links**: Tiles with the site's icon, an emoji or a letter. Manage them with ⚙. `192.168.x.x`, `fritz.box` and other LAN addresses get `http://` automatically.
-- **Recurring chores**: "every N days/weeks". Tap the circle when done, tap ✓ again to undo. Overdue chores turn red, and the header counts what's due.
+- **Recurring chores**: "every N days/weeks". Tap the circle when done, tap ✓ again to undo. A checked chore stays checked until it resets: daily chores at midnight, weekly chores at the end of Sunday (weeks run Monday–Sunday), "every N" ones after N days or weeks. Overdue chores turn red, and the header counts what's due.
 - **Birthdays**: Upcoming birthdays with age (if the year is known). Click a row to edit or delete.
 - **Weather**: Search your town with ⚙. Shows current conditions, the next 12 hours and 5 days (Open-Meteo, no API key). The last forecast is shown offline.
 - **Waste collection**: Paste your municipality's iCal/ICS (or `webcal://`) URL, which the Pi fetches, or upload an `.ics` file. Shows a "Tomorrow — put it out tonight" alert and color-coded bin types. Works offline from the saved copy.
