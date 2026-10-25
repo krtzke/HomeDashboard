@@ -2,7 +2,7 @@
 // Browsers only allow audio after a user gesture, so call unlockAudio() from a click handler.
 
 let ctx: AudioContext | null = null;
-let beepTimer: ReturnType<typeof setInterval> | undefined;
+let chimeTimer: ReturnType<typeof setInterval> | undefined;
 const ringing = new Set<string>();
 
 export function unlockAudio() {
@@ -13,20 +13,35 @@ export function unlockAudio() {
   }
 }
 
-function beep() {
+/** Rising C–E–G chime; each note a sine with a soft octave overtone, fading in and ringing out like a bell. */
+const CHIME_NOTES = [523.25, 659.25, 783.99];
+const NOTE_GAP = 0.18;
+const RING = 1.4;
+const REPEAT_MS = 2500;
+
+/** Schedules one chime on any audio context (also an OfflineAudioContext, e.g. to render it to a file). */
+export function scheduleChime(audio: BaseAudioContext, at: number) {
+  CHIME_NOTES.forEach((freq, i) => {
+    const start = at + i * NOTE_GAP;
+    for (const [mult, level] of [[1, 0.18], [2, 0.04]]) {
+      const osc = audio.createOscillator();
+      const gain = audio.createGain();
+      osc.type = 'sine';
+      osc.frequency.value = freq * mult;
+      // Ramps instead of hard on/off steps, which click.
+      gain.gain.setValueAtTime(0.0001, start);
+      gain.gain.linearRampToValueAtTime(level, start + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, start + RING);
+      osc.connect(gain).connect(audio.destination);
+      osc.start(start);
+      osc.stop(start + RING + 0.05);
+    }
+  });
+}
+
+function chime() {
   if (!ctx || ctx.state !== 'running') return;
-  const t = ctx.currentTime;
-  for (let i = 0; i < 3; i++) {
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'square';
-    osc.frequency.value = 880;
-    gain.gain.setValueAtTime(0.15, t + i * 0.25);
-    gain.gain.setValueAtTime(0, t + i * 0.25 + 0.15);
-    osc.connect(gain).connect(ctx.destination);
-    osc.start(t + i * 0.25);
-    osc.stop(t + i * 0.25 + 0.16);
-  }
+  scheduleChime(ctx, ctx.currentTime + 0.01);
   navigator.vibrate?.([200, 100, 200, 100, 200]);
 }
 
@@ -34,17 +49,17 @@ export function startAlarm(id: string, label: string) {
   if (ringing.has(id)) return;
   ringing.add(id);
   void notify(label);
-  if (!beepTimer) {
-    beep();
-    beepTimer = setInterval(beep, 1200);
+  if (!chimeTimer) {
+    chime();
+    chimeTimer = setInterval(chime, REPEAT_MS);
   }
 }
 
 export function stopAlarm(id: string) {
   ringing.delete(id);
-  if (!ringing.size && beepTimer) {
-    clearInterval(beepTimer);
-    beepTimer = undefined;
+  if (!ringing.size && chimeTimer) {
+    clearInterval(chimeTimer);
+    chimeTimer = undefined;
   }
 }
 
